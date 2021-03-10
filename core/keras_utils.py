@@ -35,7 +35,7 @@ def train_model(model: Model, dataset_id, dataset_prefix, epochs=50, batch_size=
     Args:
         model: A Keras Model.
         dataset_id: Integer id representing the dataset index containd in
-            `util/constants.py`.
+            `core/constants.py`.
         dataset_prefix: Name of the dataset. Used for weight saving.
         epochs: Number of epochs to train.
         batch_size: Size of each batch for training.
@@ -61,10 +61,10 @@ def train_model(model: Model, dataset_id, dataset_prefix, epochs=50, batch_size=
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, X_test = cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length)
@@ -130,7 +130,7 @@ def evaluate_model(model: Model, dataset_id, dataset_prefix, batch_size=128, tes
     Args:
         model: A Keras Model.
         dataset_id: Integer id representing the dataset index containd in
-            `util/constants.py`.
+            `core/constants.py`.
         dataset_prefix: Name of the dataset. Used for weight saving.
         batch_size: Size of each batch for evaluation.
         test_data_subset: Optional integer id to subset the test set. To be used if
@@ -156,10 +156,10 @@ def evaluate_model(model: Model, dataset_id, dataset_prefix, batch_size=128, tes
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             _, X_test = cutoff_sequence(None, X_test, choice, dataset_id, sequence_length)
@@ -289,7 +289,7 @@ def visualize_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=No
     Args:
         model: an Attention LSTM-FCN Model.
         dataset_id: Integer id representing the dataset index containd in
-            `util/constants.py`.
+            `core/constants.py`.
         dataset_prefix: Name of the dataset. Used for weight saving.
         batch_size: Size of each batch for evaluation.
         test_data_subset: Optional integer id to subset the test set. To be used if
@@ -320,10 +320,10 @@ def visualize_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=No
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, X_test = cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length)
@@ -428,10 +428,10 @@ def write_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=None, 
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, X_test = cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length)
@@ -538,7 +538,7 @@ def visualize_cam(model: Model, dataset_id, dataset_prefix, class_id,
     Args:
         model: A Keras Model.
         dataset_id: Integer id representing the dataset index containd in
-            `util/constants.py`.
+            `core/constants.py`.
         dataset_prefix: Name of the dataset. Used for weight saving.
         class_id: Index of the class whose activation is to be visualized.
         cutoff: Optional integer which slices of the first `cutoff` timesteps
@@ -563,10 +563,10 @@ def visualize_cam(model: Model, dataset_id, dataset_prefix, class_id,
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, _ = cutoff_sequence(X_train, _, choice, dataset_id, sequence_length)
@@ -647,10 +647,10 @@ def write_cam(model: Model, dataset_id, dataset_prefix,
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, _ = cutoff_sequence(_, X_test, choice, dataset_id, sequence_length)
@@ -716,7 +716,7 @@ def visualize_filters(model: Model, dataset_id, dataset_prefix,
     Args:
         model: A Keras Model.
         dataset_id: Integer id representing the dataset index containd in
-            `util/constants.py`.
+            `core/constants.py`.
         dataset_prefix: Name of the dataset. Used for weight saving.
         conv_id: Convolution layer ID. Can be 0, 1 or 2 for LSTMFCN and
             its univariate variants (as it uses 3 Conv blocks).
@@ -745,10 +745,10 @@ def visualize_filters(model: Model, dataset_id, dataset_prefix,
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, _ = cutoff_sequence(X_train, _, choice, dataset_id, sequence_length)
@@ -847,10 +847,10 @@ def extract_features(model: Model, dataset_id, dataset_prefix,
         if cutoff is None:
             choice = cutoff_choice(dataset_id, sequence_length)
         else:
-            assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+            assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
             choice = cutoff
 
-        if choice not in ['pre', 'post']:
+        if choice not in ['runs', 'post']:
             return
         else:
             X_train, X_test = cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length)

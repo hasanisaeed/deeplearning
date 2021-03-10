@@ -10,10 +10,10 @@ from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 
 def load_dataset_at(index, normalize_timeseries=False, verbose=True) -> (np.array, np.array):
     """
-    Loads a Univaraite UCR Dataset indexed by `util.constants`.
+    Loads a Univaraite UCR Dataset indexed by `core.constants`.
 
     Args:
-        index: Integer index, set inside `util.constants` that refers to the
+        index: Integer index, set inside `core.constants` that refers to the
             dataset.
         normalize_timeseries: Bool / Integer. Determines whether to normalize
             the timeseries.
@@ -180,7 +180,7 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
 
     Args:
         dataset_id: Integer id, refering to the dataset set inside
-            `util/constants.py`.
+            `core/constants.py`.
         seed: Numpy Random seed.
         limit: Number of data points to be visualized. Min of 1.
         cutoff: Optional integer which slices of the first `cutoff` timesteps
@@ -220,10 +220,10 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
             if cutoff is None:
                 choice = cutoff_choice(dataset_id, sequence_length)
             else:
-                assert cutoff in ['pre', 'post'], 'Cutoff parameter value must be either "pre" or "post"'
+                assert cutoff in ['runs', 'post'], 'Cutoff parameter value must be either "runs" or "post"'
                 choice = cutoff
 
-            if choice not in ['pre', 'post']:
+            if choice not in ['runs', 'post']:
                 return
             else:
                 X_train, X_test = X_test(X_train, X_test, choice, dataset_id, sequence_length)
@@ -403,19 +403,19 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
 def cutoff_choice(dataset_id, sequence_length):
     """
     Helper to allow the user to select whether they want to cutoff timesteps or not,
-    and in what manner (pre or post).
+    and in what manner (runs or post).
 
     Args:
         dataset_id: Dataset ID
         sequence_length: Length of the sequence originally.
 
     Returns:
-        String choice of pre or post slicing.
+        String choice of runs or post slicing.
     """
     print("Original sequence length was :", sequence_length, "New sequence Length will be : ",
           MAX_SEQUENCE_LENGTH_LIST[dataset_id])
     choice = input('Options : \n'
-                   '`pre` - cut the sequence from the beginning\n'
+                   '`runs` - cut the sequence from the beginning\n'
                    '`post`- cut the sequence from the end\n'
                    '`anything else` - stop execution\n'
                    'To automate choice: add flag `cutoff` = choice as above\n'
@@ -433,7 +433,7 @@ def cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length):
         X_train: Train sequences.
         X_test: Test sequences.
         choice: User's choice of slicing method.
-        dataset_id: Integer id of the dataset set inside `util/constants.py`.
+        dataset_id: Integer id of the dataset set inside `core/constants.py`.
         sequence_length: Original length of the sequence.
 
     Returns:
@@ -443,7 +443,7 @@ def cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length):
     assert MAX_SEQUENCE_LENGTH_LIST[dataset_id] < sequence_length, "If sequence is to be cut, max sequence" \
                                                                    "length must be less than original sequence length."
     cutoff = sequence_length - MAX_SEQUENCE_LENGTH_LIST[dataset_id]
-    if choice == 'pre':
+    if choice == 'runs':
         if X_train is not None:
             X_train = X_train[:, :, cutoff:]
         if X_test is not None:

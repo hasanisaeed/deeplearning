@@ -7,7 +7,6 @@
    Length: 899, Activation: SoftMax
 '''
 import os
-import pickle
 from itertools import cycle
 from keras.layers import GRU
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from pre.utils.confusion_matrix import draw_confusion_matrix
+from runs.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -136,7 +135,7 @@ def one_hot_encode(x, n_classes):
 def roc_curve_draw(model, y_test, y_score):
     y_test = np.asarray(list(map(int, y_test)))
 
-    n_classes = 12
+    n_classes = 16
     one_hot_list = one_hot_encode(y_test, n_classes)
     y_test = one_hot_list.astype(int)
     lw = 2
@@ -254,8 +253,8 @@ if __name__ == "__main__":
                 print('*' * 20, "Training model for dataset %s" % (dname), '*' * 20)
 
                 # comment out the training code to only evaluate !
-                # train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
-                #             normalize_timeseries=normalize_dataset)
+                train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
+                            normalize_timeseries=normalize_dataset)
                 try:
                     acc = evaluate_model(model, did, dataset_name_, batch_size=128,
                                          normalize_timeseries=normalize_dataset)
@@ -263,7 +262,7 @@ if __name__ == "__main__":
                     _, _, X_test, y_test, is_timeseries = load_dataset_at(0,
                                                                           normalize_timeseries=True)
                     # print(y_test)
-                    if MODEL_NAME == 'grufcn':
+                    if MODEL_NAME == 'alstmfcn':
                         dt = pd.DataFrame(data=np.asarray(list(map(int, y_test))))
                         dt.to_csv("weights/matrix____class_" + dataset_name_.split('/')[0] + ".csv", mode='w',
                                   index=True)
@@ -271,7 +270,7 @@ if __name__ == "__main__":
                     # Draw ROC curve
                     roc_curve_draw(MODEL_NAME, y_test, np.array(y_pred))
 
-                    if MODEL_NAME == 'grufcn':
+                    if MODEL_NAME == 'alstmfcn':
                         for layer_name in m_layers:
                             intermediate_layer_model = Model(inputs=model.input,
                                                              outputs=model.get_layer(layer_name).output)
@@ -301,13 +300,6 @@ if __name__ == "__main__":
                         c.to_csv('weights/output_matrix____raw_signal.csv', index=False)
 
                     y_pred_bool = np.argmax(y_pred, axis=1)
-
-                    with open('y_pred_bool', 'wb') as fp:
-                        pickle.dump(np.array(y_pred_bool).tolist(), fp)
-
-                    with open('y_test', 'wb') as fp:
-                        pickle.dump(np.array(np.asarray(list(map(int, y_test)))).tolist(), fp)
-
                     _pr = classification_report(np.asarray(list(map(int, y_test))), y_pred_bool)
                     with open('results/precision_recall_' + MODEL_NAME + '.txt', mode='w') as f:
                         f.write(_pr)

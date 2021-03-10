@@ -7,19 +7,20 @@
    Length: 899, Activation: SoftMax
 '''
 import os
+import pickle
 from itertools import cycle
-
+from keras.layers import GRU
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from keras import backend as K
-from keras.layers import Conv1D, BatchNormalization, GlobalAveragePooling1D, Permute, Dropout
+from keras.layers import Conv1D, BatchNormalization, GlobalAveragePooling1D, Permute, Dropout, LSTM
 from keras.layers import Input, Dense, concatenate, Activation
 from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from pre.utils.confusion_matrix import draw_confusion_matrix
+from runs.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -39,7 +40,7 @@ def generate_lstmfcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
     ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
 
     # x = LSTM(NUM_CELLS)(ip)
-    from keras.layers import GRU
+
     x = GRU(NUM_CELLS)(ip)
     x = Dropout(rate=0.8)(x)
 
@@ -201,15 +202,15 @@ if __name__ == "__main__":
 
     epoch = 1000
 
-    dataset_map = [('run_9_alstm_with_softmax', 0)]
+    dataset_map = [('run_12_gru_with_softmax', 0)]
 
     print("Num datasets : ", len(dataset_map))
     base_log_name = '%s_%d_cells_new_datasets.csv'
     base_weights_dir = '%s_%d_cells_weights/'
 
     MODELS = [
-        # ('grufcn', generate_lstmfcn),
-        ('lstmfcn', generate_lstmfcn),
+        ('grufcn', generate_lstmfcn),
+        # ('lstmfcn', generate_lstmfcn),
         # ('alstmfcn', generate_alstmfcn),
     ]
 
@@ -262,7 +263,7 @@ if __name__ == "__main__":
                     _, _, X_test, y_test, is_timeseries = load_dataset_at(0,
                                                                           normalize_timeseries=True)
                     # print(y_test)
-                    if MODEL_NAME == 'alstmfcn':
+                    if MODEL_NAME == 'grufcn':
                         dt = pd.DataFrame(data=np.asarray(list(map(int, y_test))))
                         dt.to_csv("weights/matrix____class_" + dataset_name_.split('/')[0] + ".csv", mode='w',
                                   index=True)
@@ -270,7 +271,7 @@ if __name__ == "__main__":
                     # Draw ROC curve
                     roc_curve_draw(MODEL_NAME, y_test, np.array(y_pred))
 
-                    if MODEL_NAME == 'alstmfcn':
+                    if MODEL_NAME == 'grufcn':
                         for layer_name in m_layers:
                             intermediate_layer_model = Model(inputs=model.input,
                                                              outputs=model.get_layer(layer_name).output)
@@ -279,7 +280,8 @@ if __name__ == "__main__":
                             dt = pd.DataFrame(data=intermediate_output)
                             # dt = pd.DataFrame(data=y_test)
 
-                            dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv", mode='w',
+                            dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv",
+                                      mode='w',
                                       index=True)
                         for item in m_layers:
                             a = pd.read_csv('weights/matrix____' + item + MODEL_NAME + '_64_cells_weights.csv')
@@ -299,6 +301,13 @@ if __name__ == "__main__":
                         c.to_csv('weights/output_matrix____raw_signal.csv', index=False)
 
                     y_pred_bool = np.argmax(y_pred, axis=1)
+
+                    with open('y_pred_bool', 'wb') as fp:
+                        pickle.dump(np.array(y_pred_bool).tolist(), fp)
+
+                    with open('y_test', 'wb') as fp:
+                        pickle.dump(np.array(np.asarray(list(map(int, y_test)))).tolist(), fp)
+
                     _pr = classification_report(np.asarray(list(map(int, y_test))), y_pred_bool)
                     with open('results/precision_recall_' + MODEL_NAME + '.txt', mode='w') as f:
                         f.write(_pr)

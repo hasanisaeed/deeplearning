@@ -19,7 +19,7 @@ from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from pre.utils.confusion_matrix import draw_confusion_matrix
+from runs.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -27,7 +27,7 @@ from util.keras_utils import train_model
 from util.layer_utils import AttentionLSTM
 
 m_layers = [
-    'lstm_1',
+    'attention_lstm_1',
     'dropout_1',
     'global_average_pooling1d_1',
     'concatenate_1',
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     epoch = 1000
 
-    dataset_map = [('run_10_lstmfcn_with_softmax', 0)]
+    dataset_map = [('run_11_lstmfcn_with_softmax', 0)]
 
     print("Num datasets : ", len(dataset_map))
     base_log_name = '%s_%d_cells_new_datasets.csv'
@@ -209,8 +209,8 @@ if __name__ == "__main__":
 
     MODELS = [
         # ('grufcn', generate_lstmfcn),
-        ('lstmfcn', generate_lstmfcn),
-        # ('alstmfcn', generate_alstmfcn),
+        # ('lstmfcn', generate_lstmfcn),
+        ('alstmfcn', generate_alstmfcn),
     ]
 
     # Number of cells

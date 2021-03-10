@@ -8,7 +8,7 @@
 '''
 import os
 from itertools import cycle
-from keras.layers import GRU
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from pre.utils.confusion_matrix import draw_confusion_matrix
+from runs.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -27,7 +27,7 @@ from util.keras_utils import train_model
 from util.layer_utils import AttentionLSTM
 
 m_layers = [
-    'gru_1',
+    'lstm_1',
     'dropout_1',
     'global_average_pooling1d_1',
     'concatenate_1',
@@ -38,9 +38,9 @@ m_layers = [
 def generate_lstmfcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
     ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
 
-    # x = LSTM(NUM_CELLS)(ip)
-
-    x = GRU(NUM_CELLS)(ip)
+    x = LSTM(NUM_CELLS)(ip)
+    # from keras.layers import GRU
+    # x = GRU(NUM_CELLS)(ip)
     x = Dropout(rate=0.8)(x)
 
     y = Permute((2, 1))(ip)
@@ -135,7 +135,7 @@ def one_hot_encode(x, n_classes):
 def roc_curve_draw(model, y_test, y_score):
     y_test = np.asarray(list(map(int, y_test)))
 
-    n_classes = 16
+    n_classes = 12
     one_hot_list = one_hot_encode(y_test, n_classes)
     y_test = one_hot_list.astype(int)
     lw = 2
@@ -201,15 +201,15 @@ if __name__ == "__main__":
 
     epoch = 1000
 
-    dataset_map = [('run_12_gru_with_softmax', 0)]
+    dataset_map = [('run_10_lstmfcn_with_softmax', 0)]
 
     print("Num datasets : ", len(dataset_map))
     base_log_name = '%s_%d_cells_new_datasets.csv'
     base_weights_dir = '%s_%d_cells_weights/'
 
     MODELS = [
-        ('grufcn', generate_lstmfcn),
-        # ('lstmfcn', generate_lstmfcn),
+        # ('grufcn', generate_lstmfcn),
+        ('lstmfcn', generate_lstmfcn),
         # ('alstmfcn', generate_alstmfcn),
     ]
 
@@ -279,8 +279,7 @@ if __name__ == "__main__":
                             dt = pd.DataFrame(data=intermediate_output)
                             # dt = pd.DataFrame(data=y_test)
 
-                            dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv",
-                                      mode='w',
+                            dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv", mode='w',
                                       index=True)
                         for item in m_layers:
                             a = pd.read_csv('weights/matrix____' + item + MODEL_NAME + '_64_cells_weights.csv')

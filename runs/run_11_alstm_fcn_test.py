@@ -5,7 +5,6 @@
    ------------
 >> Second run:
    Length: 899, Activation: SoftMax
-   **************************************************************74
 '''
 import os
 from itertools import cycle
@@ -20,7 +19,7 @@ from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from pre.utils.confusion_matrix import draw_confusion_matrix
+from runs.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -28,7 +27,7 @@ from util.keras_utils import train_model
 from util.layer_utils import AttentionLSTM
 
 m_layers = [
-    'lstm_1',
+    'attention_lstm_1',
     'dropout_1',
     'global_average_pooling1d_1',
     'concatenate_1',
@@ -40,6 +39,7 @@ def generate_lstmfcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
     ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
 
     x = LSTM(NUM_CELLS)(ip)
+    # from keras.layers import GRU
     # x = GRU(NUM_CELLS)(ip)
     x = Dropout(rate=0.8)(x)
 
@@ -199,18 +199,18 @@ def roc_curve_draw(model, y_test, y_score):
 
 if __name__ == "__main__":
 
-    epoch = 1500
+    epoch = 1000
 
-    dataset_map = [('run_8_alstm_with3_softmax', 0)]
+    dataset_map = [('run_11_lstmfcn_with_softmax', 0)]
 
     print("Num datasets : ", len(dataset_map))
     base_log_name = '%s_%d_cells_new_datasets.csv'
     base_weights_dir = '%s_%d_cells_weights/'
 
     MODELS = [
-        ('grufcn', generate_lstmfcn),
+        # ('grufcn', generate_lstmfcn),
         # ('lstmfcn', generate_lstmfcn),
-        # ('alstmfcn', generate_alstmfcn),
+        ('alstmfcn', generate_alstmfcn),
     ]
 
     # Number of cells
@@ -253,8 +253,8 @@ if __name__ == "__main__":
                 print('*' * 20, "Training model for dataset %s" % (dname), '*' * 20)
 
                 # comment out the training code to only evaluate !
-                train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
-                            normalize_timeseries=normalize_dataset)
+                # train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
+                #             normalize_timeseries=normalize_dataset)
                 try:
                     acc = evaluate_model(model, did, dataset_name_, batch_size=128,
                                          normalize_timeseries=normalize_dataset)
