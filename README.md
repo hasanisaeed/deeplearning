@@ -3,15 +3,15 @@
 
 ## GRU Results
 |Downsampling|Sequence Length|Train (Samples)|Test (Samples)|Classes|
-|---|-------------|-------------|------|---------|
+|:---:|:---:|:---:|:---:|:---:|
 |Yes|899|3095 |890|16|
 
 |Run |Epoch|Batch Size|Architecture|Weights|Downsampling |Accuracy|
-|---|---|---|---|---|---|---|
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
 |1|600|128|[#1](#1-architecture)|1|Yes|71.46%|
 |2|1200|128|[#1](#1-architecture)|2|Yes|84.26%|
 |3|1200|128|[#2](#2-architecture)|3|Yes|84.94%|
-|4|1200|128|[#3](#3-architecture)|4|Yes|87.52%|
+|`4`|1200|128|[#3](#3-architecture)|4|Yes|`87.52%`|
 |5|900|64|[#1](#1-architecture)|5|Yes|83.37%|
 
 ### Path of the weight matrix
