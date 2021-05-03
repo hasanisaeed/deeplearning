@@ -1,20 +1,6 @@
 ### Deep Learning
 >Bearing Fault Detection and Classification Based on Temporal Convolutions and LSTM Network in Induction Machine Systems.
 
-# deeplearning
-Bearing Fault Detection and Classification Based on Temporal Convolutions and LSTM Network in Induction Machine Systems.
- ### Scheme of architecture
-
-```mermaid
-graph LR
-A[Signal]  --> B(LSTM/GRU layer)
-A --> C(FCN Layer)
-B --> D{concatenate}
-C --> D{Concat}
-D --> E(Softmax)
-```
-
-
 ## GRU Results
 |  Sequence Length              |Train Samples            |Test Samples           |Classes                         |
 |----------------|-------------------------------|-----------------------------|-----------------------------|
