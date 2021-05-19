@@ -19,7 +19,7 @@ from keras.models import Model
 from scipy import interp
 from sklearn.metrics import roc_curve, auc, classification_report
 
-from runs.utils.confusion_matrix import draw_confusion_matrix
+from pre.utils.confusion_matrix import draw_confusion_matrix
 from util.constants import MAX_SEQUENCE_LENGTH_LIST, NB_CLASSES_LIST
 from util.generic_utils import load_dataset_at
 from util.keras_utils import evaluate_model
@@ -53,6 +53,87 @@ def generate_lstmfcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
     y = Activation('relu')(y)
 
     y = Conv1D(128, 5, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(64, 3, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = GlobalAveragePooling1D()(y)
+
+    x = concatenate([x, y])
+
+    out = Dense(NB_CLASS, activation='softmax')(x)
+
+    model = Model(ip, out)
+
+    model.summary()
+
+    # callbacks = [callback(model=model, X_train=x)]
+    # # add load model code here to fine-tune
+
+    return model
+
+
+def generate_lstmfcn2(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
+    ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
+
+    # x = LSTM(NUM_CELLS)(ip)
+
+    x = GRU(NUM_CELLS)(ip)
+    x = Dropout(rate=0.8)(x)
+
+    y = Permute((2, 1))(ip)
+    y = Conv1D(128, 8, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(256, 5, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(256, 5, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(64, 3, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = GlobalAveragePooling1D()(y)
+
+    x = concatenate([x, y])
+
+    out = Dense(NB_CLASS, activation='softmax')(x)
+
+    model = Model(ip, out)
+
+    model.summary()
+
+    # callbacks = [callback(model=model, X_train=x)]
+    # # add load model code here to fine-tune
+
+    return model
+
+def generate_lstmfcn3(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
+    ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
+
+    # x = LSTM(NUM_CELLS)(ip)
+
+    x = GRU(NUM_CELLS)(ip)
+    x = Dropout(rate=0.8)(x)
+
+    y = Permute((2, 1))(ip)
+    y = Conv1D(64, 8, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(128, 5, padding='same', kernel_initializer='he_uniform')(y)
+    y = BatchNormalization()(y)
+    y = Activation('relu')(y)
+
+    y = Conv1D(256, 5, padding='same', kernel_initializer='he_uniform')(y)
     y = BatchNormalization()(y)
     y = Activation('relu')(y)
 
@@ -198,10 +279,10 @@ def roc_curve_draw(model, y_test, y_score):
 
 
 if __name__ == "__main__":
-
+# 3:00 AM
     epoch = 1000
 
-    dataset_map = [('run_12_gru_with_softmax', 0)]
+    dataset_map = [('run_12_gru_with_softmax_0001', 0)]
 
     print("Num datasets : ", len(dataset_map))
     base_log_name = '%s_%d_cells_new_datasets.csv'
@@ -209,6 +290,8 @@ if __name__ == "__main__":
 
     MODELS = [
         ('grufcn', generate_lstmfcn),
+        ('grufcn2', generate_lstmfcn2),
+        # ('grufcn3', generate_lstmfcn3),
         # ('lstmfcn', generate_lstmfcn),
         # ('alstmfcn', generate_alstmfcn),
     ]
