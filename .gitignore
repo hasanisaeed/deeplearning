@@ -41,7 +41,6 @@ pip-delete-this-directory.txt
 *.zip
 *.csv
 *.h5
-*.png
 files
 results
 data
