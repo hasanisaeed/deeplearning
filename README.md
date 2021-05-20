@@ -5,7 +5,7 @@
 |Downsampling|Sequence Length|Train (Samples)|Test (Samples)|Classes|
 |:---:|:---:|:---:|:---:|:---:|
 |Yes|899|3095 |890|16|
-|No|1000|3095 |890|16|
+|No|1000|- |-|16|
 
 |Run |Epoch|Batch Size|Architecture|Weights|Downsampling |Accuracy|
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
