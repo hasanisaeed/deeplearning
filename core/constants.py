@@ -1,6 +1,6 @@
-TRAIN_FILES = ['../data//train.csv']
+TRAIN_FILES = ['data//train.csv']
 
-TEST_FILES = ['../data//test.csv']
+TEST_FILES = ['data//test.csv']
 
 MAX_SEQUENCE_LENGTH_LIST = [999]
 
