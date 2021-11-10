@@ -26,12 +26,7 @@
 |`13`|850||[#5](#5-architecture)|-|No|`93.70%`|
 |14|1000||[#5](#5-architecture)|-|No|92.43%|
 |15|1050||[#5](#5-architecture)|-|No|92.43%|
-### Path of the weight matrix
-1) ~~./weights/grufcn_64_cells_weights/run_12_gru_with_softmax_weights.h5~~
-2) ~~./weights/grufcn_64_cells_weights/run_12_gru_with_softmax_weights.h5~~
-3) ~~./weights/grufcn2_64_cells_weights/run_12_gru_with_softmax_weights.h5~~
-4) ~~./weights/grufcn3_64_cells_weights/run_12_gru_with_softmax_weights.h5~~
-5) ~~./weights/grufcn_64_cells_weights/run_12_gru_with_softmax_weights.h5~~
+
 
 ## Downsampling (Yes)
 ### #1 Architecture
