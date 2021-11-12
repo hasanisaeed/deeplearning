@@ -1,11 +1,3 @@
-'''
->> First run:
-   Accuracy: ?
-   Epoch: 1000
-   ------------
->> Second run:
-   Length: 899, Activation: SoftMax
-'''
 import os
 from itertools import cycle
 from keras.layers import GRU
