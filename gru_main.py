@@ -25,8 +25,7 @@ m_layers = [
     'dense_1'
 ]
 
-
-def generate_lstmfcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
+def generate_grufcn(MAX_SEQUENCE_LENGTH, NB_CLASS, NUM_CELLS=8):
     ip = Input(shape=(1, MAX_SEQUENCE_LENGTH))
 
     # x = LSTM(NUM_CELLS)(ip)
@@ -200,7 +199,7 @@ if __name__ == "__main__":
     base_weights_dir = '%s_%d_cells_weights/'
 
     MODELS = [
-        ('lstmfcn', generate_lstmfcn),
+        ('lstmfcn', generate_grufcn),
         # ('alstmfcn', generate_alstmfcn),
     ]
 
