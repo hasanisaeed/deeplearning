@@ -107,8 +107,7 @@ def specificity(y_true, y_pred):
     neg_y_pred = 1 - y_pred
     fp = K.sum(neg_y_true * y_pred)
     tn = K.sum(neg_y_true * neg_y_pred)
-    specificity = tn / (tn + fp + K.epsilon())
-    return specificity
+    return tn / (tn + fp + K.epsilon())
 
 
 def one_hot_encode(x, n_classes):
@@ -211,16 +210,14 @@ if __name__ == "__main__":
     # Normalize = 2 means dataset normalization.
     normalize_dataset = True
 
-    for model_id, (MODEL_NAME, model_fn) in enumerate(MODELS):
+    for MODEL_NAME, model_fn in MODELS:
         for cell in CELLS:
             successes = []
             failures = []
 
             if not os.path.exists(base_log_name % (MODEL_NAME, cell)):
-                file = open(base_log_name % (MODEL_NAME, cell), 'w')
-                file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
-                file.close()
-
+                with open(base_log_name % (MODEL_NAME, cell), 'w') as file:
+                    file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
             for dname, did in dataset_map:
 
                 MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH_LIST[did]
@@ -229,74 +226,71 @@ if __name__ == "__main__":
                 # release GPU Memory
                 K.clear_session()
 
-                file = open(base_log_name % (MODEL_NAME, cell), 'a+')
+                with open(base_log_name % (MODEL_NAME, cell), 'a+') as file:
+                    weights_dir = base_weights_dir % (MODEL_NAME, cell)
 
-                weights_dir = base_weights_dir % (MODEL_NAME, cell)
+                    if not os.path.exists('weights/' + weights_dir):
+                        os.makedirs('weights/' + weights_dir)
 
-                if not os.path.exists('weights/' + weights_dir):
-                    os.makedirs('weights/' + weights_dir)
+                    dataset_name_ = weights_dir + dname
 
-                dataset_name_ = weights_dir + dname
+                    # try:
+                    model = model_fn(MAX_SEQUENCE_LENGTH, NB_CLASS, cell)
 
-                # try:
-                model = model_fn(MAX_SEQUENCE_LENGTH, NB_CLASS, cell)
+                    print('*' * 20, f"Training model for dataset {dname}", '*' * 20)
 
-                print('*' * 20, "Training model for dataset %s" % (dname), '*' * 20)
+                    ## comment out the training code to only evaluate !
+                    train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
+                                normalize_timeseries=normalize_dataset)
 
-                ## comment out the training code to only evaluate !
-                train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,
-                            normalize_timeseries=normalize_dataset)
+                    acc = evaluate_model(model, did, dataset_name_, batch_size=128,
+                                         normalize_timeseries=normalize_dataset)
+                    s = "%d,%s,%s,%0.6f\n" % (did, dname, dataset_name_, acc)
+                    _, _, X_test, y_test, is_timeseries = load_dataset_at(0,
+                                                                          normalize_timeseries=True)
+                    # print(y_test)
+                    # if MODEL_NAME == 'alstmfcn':
+                    #     dt = pd.DataFrame(data=np.asarray(list(map(int, y_test))))
+                    #     dt.to_csv("weights/matrix____class_" + dataset_name_.split('/')[0] + ".csv", mode='w',
+                    #               index=True)
+                    # y_true = np.array(y_test)[:, 0].astype(int)
+                    y_pred = model.predict(X_test, batch_size=128, verbose=1)
+                    # Draw ROC curve
+                    roc_curve_draw(MODEL_NAME, y_test, np.array(y_pred))
 
-                acc = evaluate_model(model, did, dataset_name_, batch_size=128,
-                                     normalize_timeseries=normalize_dataset)
-                s = "%d,%s,%s,%0.6f\n" % (did, dname, dataset_name_, acc)
-                _, _, X_test, y_test, is_timeseries = load_dataset_at(0,
-                                                                      normalize_timeseries=True)
-                # print(y_test)
-                # if MODEL_NAME == 'alstmfcn':
-                #     dt = pd.DataFrame(data=np.asarray(list(map(int, y_test))))
-                #     dt.to_csv("weights/matrix____class_" + dataset_name_.split('/')[0] + ".csv", mode='w',
-                #               index=True)
-                # y_true = np.array(y_test)[:, 0].astype(int)
-                y_pred = model.predict(X_test, batch_size=128, verbose=1)
-                # Draw ROC curve
-                roc_curve_draw(MODEL_NAME, y_test, np.array(y_pred))
+                    if MODEL_NAME == 'alstmfcn':
+                        for layer_name in m_layers:
+                            intermediate_layer_model = Model(inputs=model.input,
+                                                             outputs=model.get_layer(layer_name).output)
+                            intermediate_output = intermediate_layer_model.predict(X_test)
+                            # Save in csv file
+                            dt = pd.DataFrame(data=intermediate_output)
+                            # dt = pd.DataFrame(data=y_test)
 
-                if MODEL_NAME == 'alstmfcn':
-                    for layer_name in m_layers:
-                        intermediate_layer_model = Model(inputs=model.input,
-                                                         outputs=model.get_layer(layer_name).output)
-                        intermediate_output = intermediate_layer_model.predict(X_test)
-                        # Save in csv file
-                        dt = pd.DataFrame(data=intermediate_output)
-                        # dt = pd.DataFrame(data=y_test)
+                            dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv", mode='w',
+                                      index=True)
+                        for item in m_layers:
+                            a = pd.read_csv('weights/matrix____' + item + 'alstmfcn_64_cells_weights.csv')
+                            print(a)
 
-                        dt.to_csv("weights/matrix____" + layer_name + dataset_name_.split('/')[0] + ".csv", mode='w',
-                                  index=True)
-                    for item in m_layers:
-                        a = pd.read_csv('weights/matrix____' + item + 'alstmfcn_64_cells_weights.csv')
-                        print(a)
+                            b = pd.read_csv('../weights/class.csv')
+                            c = a.merge(b)
+                            c.to_csv('weights/output_matrix____' + item + '.csv', index=False)
 
+                        # Row Signal
+                        a = pd.read_csv('../raw_signal.csv')
                         b = pd.read_csv('../weights/class.csv')
                         c = a.merge(b)
-                        c.to_csv('weights/output_matrix____' + item + '.csv', index=False)
+                        c.to_csv('weights/output_matrix____raw_signal.csv', index=False)
 
-                    # Row Signal
-                    a = pd.read_csv('../raw_signal.csv')
-                    b = pd.read_csv('../weights/class.csv')
-                    c = a.merge(b)
-                    c.to_csv('weights/output_matrix____raw_signal.csv', index=False)
+                    y_pred_bool = np.argmax(y_pred, axis=1)
+                    _pr = classification_report(np.asarray(list(map(int, y_test))), y_pred_bool)
+                    with open('results/precision_recall_' + MODEL_NAME + '.txt', mode='w') as f:
+                        f.write(_pr)
+                    file.write(s)
+                    file.flush()
 
-                y_pred_bool = np.argmax(y_pred, axis=1)
-                _pr = classification_report(np.asarray(list(map(int, y_test))), y_pred_bool)
-                with open('results/precision_recall_' + MODEL_NAME + '.txt', mode='w') as f:
-                    f.write(_pr)
-                file.write(s)
-                file.flush()
-
-                successes.append(s)
-                file.close()
-
+                    successes.append(s)
             print('\n\n')
             print('*' * 20, "Successes", '*' * 20)
             print()

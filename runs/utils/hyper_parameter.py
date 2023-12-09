@@ -435,7 +435,7 @@ if __name__ == "__main__":
     # Number of cells
     CELLS = [8, 64, 128]
 
-    for model_id, (MODEL_NAME, model_fn) in enumerate(MODELS):
+    for MODEL_NAME, model_fn in MODELS:
         for dname, did in dataset_map:
 
             current_loss = 1e10
@@ -450,22 +450,20 @@ if __name__ == "__main__":
             for cell in CELLS:
 
                 if not os.path.exists(base_log_name % (MODEL_NAME, cell)):
-                    file = open(base_log_name % (MODEL_NAME, cell), 'w')
-                    file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
-                    file.close()
-
+                    with open(base_log_name % (MODEL_NAME, cell), 'w') as file:
+                        file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
                 # release GPU Memory
                 K.clear_session()
                 weights_dir = base_weights_dir % (MODEL_NAME, cell)
 
-                if not os.path.exists('weights/' + weights_dir):
-                    os.makedirs('weights/' + weights_dir)
+                if not os.path.exists(f'weights/{weights_dir}'):
+                    os.makedirs(f'weights/{weights_dir}')
 
                 dataset_name_ = weights_dir + dname
 
                 model = model_fn(MAX_SEQUENCE_LENGTH, NB_CLASS, cell)
 
-                print('*' * 20, "Training model for dataset %s" % (dname), '*' * 20)
+                print('*' * 20, f"Training model for dataset {dname}", '*' * 20)
 
                 train_model(model, did, dataset_name_, epochs=2000, batch_size=128, normalize_timeseries=True)
 
@@ -485,10 +483,8 @@ if __name__ == "__main__":
 
             s = "%d,%s,%s,%0.6f\n" % (did, dname, dataset_name_, acc)
 
-            file = open(base_log_name % (MODEL_NAME, finalcell), 'a+')
-            file.write(s)
-            file.flush()
+            with open(base_log_name % (MODEL_NAME, finalcell), 'a+') as file:
+                file.write(s)
+                file.flush()
 
-            successes.append(s)
-
-            file.close()
+                successes.append(s)
