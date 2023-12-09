@@ -123,8 +123,7 @@ def specificity(y_true, y_pred):
     neg_y_pred = 1 - y_pred
     fp = K.sum(neg_y_true * y_pred)
     tn = K.sum(neg_y_true * neg_y_pred)
-    specificity = tn / (tn + fp + K.epsilon())
-    return specificity
+    return tn / (tn + fp + K.epsilon())
 
 
 def one_hot_encode(x, n_classes):
@@ -227,16 +226,14 @@ if __name__ == "__main__":
     # Normalize = 2 means dataset normalization.
     normalize_dataset = True
 
-    for model_id, (MODEL_NAME, model_fn) in enumerate(MODELS):
+    for MODEL_NAME, model_fn in MODELS:
         for cell in CELLS:
             successes = []
             failures = []
 
             if not os.path.exists(base_log_name % (MODEL_NAME, cell)):
-                file = open(base_log_name % (MODEL_NAME, cell), 'w')
-                file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
-                file.close()
-
+                with open(base_log_name % (MODEL_NAME, cell), 'w') as file:
+                    file.write('%s,%s,%s,%s\n' % ('dataset_id', 'dataset_name', 'dataset_name_', 'test_accuracy'))
             for dname, did in dataset_map:
 
                 MAX_SEQUENCE_LENGTH = MAX_SEQUENCE_LENGTH_LIST[did]
@@ -255,7 +252,7 @@ if __name__ == "__main__":
 
                 model = model_fn(MAX_SEQUENCE_LENGTH, NB_CLASS, cell)
 
-                print('*' * 20, "Training model for dataset %s" % (dname), '*' * 20)
+                print('*' * 20, f"Training model for dataset {dname}", '*' * 20)
 
                 # comment out the training code to only evaluate !
                 train_model(model, did, dataset_name_, epochs=epoch, batch_size=128,

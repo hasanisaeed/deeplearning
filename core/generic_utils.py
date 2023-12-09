@@ -82,12 +82,10 @@ def load_dataset_at(index, normalize_timeseries=False, verbose=True) -> (np.arra
             if normalize_timeseries == 2:
                 X_train_mean = X_train.mean()
                 X_train_std = X_train.std()
-                X_train = (X_train - X_train_mean) / (X_train_std + 1e-8)
-
             else:
                 X_train_mean = X_train.mean(axis=-1, keepdims=True)
                 X_train_std = X_train.std(axis=-1, keepdims=True)
-                X_train = (X_train - X_train_mean) / (X_train_std + 1e-8)
+            X_train = (X_train - X_train_mean) / (X_train_std + 1e-8)
 
     # if verbose: print("Finished loading train dataset..")
     #
@@ -160,15 +158,9 @@ def calculate_dataset_metrics(X_train):
         purposes.
     """
     is_timeseries = len(X_train.shape) == 3
-    if is_timeseries:
-        # timeseries dataset
-        max_sequence_length = X_train.shape[-1]
-        max_nb_words = None
-    else:
-        # transformed dataset
-        max_sequence_length = X_train.shape[-1]
-        max_nb_words = np.amax(X_train) + 1
-
+    # timeseries dataset
+    max_sequence_length = X_train.shape[-1]
+    max_nb_words = None if is_timeseries else np.amax(X_train) + 1
     return max_nb_words, max_sequence_length
 
 
@@ -237,15 +229,14 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
     if limit is None:
         train_size = X_train.shape[0]
         test_size = X_test.shape[0]
-    else:
-        if not plot_classwise:
-            train_size = limit
-            test_size = limit
-        else:
-            assert limit == 1, 'If plotting classwise, limit must be 1 so as to ensure number of samples per class = 1'
-            train_size = NB_CLASSES_LIST[dataset_id] * limit
-            test_size = NB_CLASSES_LIST[dataset_id] * limit
+    elif plot_classwise:
+        assert limit == 1, 'If plotting classwise, limit must be 1 so as to ensure number of samples per class = 1'
+        train_size = NB_CLASSES_LIST[dataset_id] * limit
+        test_size = NB_CLASSES_LIST[dataset_id] * limit
 
+    else:
+        train_size = limit
+        test_size = limit
     if not plot_classwise:
         train_idx = np.random.randint(0, X_train.shape[0], size=train_size)
         X_train = X_train[train_idx, 0, :]
@@ -348,13 +339,8 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
                            index=range(X_test.shape[0]),
                            columns=columns)
 
-    if plot_data is not None:
-        rows = 2
-        cols = 2
-    else:
-        rows = 1
-        cols = 2
-
+    rows = 2 if plot_data is not None else 1
+    cols = 2
     fig, axs = plt.subplots(rows, cols, squeeze=False,
                             tight_layout=True, figsize=(8, 6))
     axs[0][0].set_title('Train dataset', size=16)
@@ -377,7 +363,7 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
                                           index=range(X_train_attention.shape[0]),
                                           columns=columns)
 
-        axs[1][0].set_title('Train %s Sequence' % (type), size=16)
+        axs[1][0].set_title(f'Train {type} Sequence', size=16)
         axs[1][0].set_xlabel('timestep')
         axs[1][0].set_ylabel('value')
         train_attention_df.plot(subplots=False,
@@ -390,7 +376,7 @@ def plot_dataset(dataset_id, seed=None, limit=None, cutoff=None,
                                index=range(X_test_attention.shape[0]),
                                columns=columns)
 
-        axs[1][1].set_title('Test %s Sequence' % (type), size=16)
+        axs[1][1].set_title(f'Test {type} Sequence', size=16)
         axs[1][1].set_xlabel('timestep')
         axs[1][1].set_ylabel('value')
         test_df.plot(subplots=False,

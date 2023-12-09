@@ -25,7 +25,7 @@ def process_file(fn):
     df.to_csv(new_path, sep=',', index=False, header=None, encoding='latin-1')
 
     # shutil.copy(fn, new_path)
-    print("Copied file from %s to %s" % (fn, new_path))
+    print(f"Copied file from {fn} to {new_path}")
 
 
 with Parallel(n_jobs=-1, backend='loky', verbose=1) as engine:

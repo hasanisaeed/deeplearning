@@ -17,22 +17,22 @@ bounds = np.concatenate(([resr.min() - 1], u[:-1] + np.diff(u) / 2., [resr.max()
 
 norm = colors.BoundaryNorm(bounds, len(bounds) - 1)
 
-_files = []
-_files.append('output_matrix____raw_signal')
-_files.append('output_matrix____dropout_1')
-_files.append('output_matrix____gru_1')
-_files.append('output_matrix____global_average_pooling1d_1')
-_files.append('output_matrix____concatenate_1')
-_files.append('output_matrix____dense_1')
-
-_plot_title = []
-_plot_title.append('Raw Signal')
-_plot_title.append('LSTM Layer (a)')
-_plot_title.append('Dropout Layer (b)')
-_plot_title.append('FCN Layer (c) ')
-_plot_title.append('Concatenate Layer (d)')
-_plot_title.append('Softmax Layer 5 (e)')
-
+_files = [
+    'output_matrix____raw_signal',
+    'output_matrix____dropout_1',
+    'output_matrix____gru_1',
+    'output_matrix____global_average_pooling1d_1',
+    'output_matrix____concatenate_1',
+    'output_matrix____dense_1',
+]
+_plot_title = [
+    'Raw Signal',
+    'LSTM Layer (a)',
+    'Dropout Layer (b)',
+    'FCN Layer (c) ',
+    'Concatenate Layer (d)',
+    'Softmax Layer 5 (e)',
+]
 _colors = [
     "#000066",
     "#4c0080",

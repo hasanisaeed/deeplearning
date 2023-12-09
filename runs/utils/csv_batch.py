@@ -13,15 +13,12 @@ def to_csv_batch(src_csv, dst_dir, size=2500, index=False):
     # Loop through batches
     for i in range(math.ceil(len(df) / size)):
 
-        fname = dst_dir+'/Batch_' + str(i+1) + '.csv'
+        fname = f'{dst_dir}/Batch_{str(i + 1)}.csv'
         df[low:high].to_csv(fname, index=index)
 
         # Update selection
         low = high
-        if (high + size < len(df)):
-            high = high + size
-        else:
-            high = len(df)
+        high = min(high + size, len(df))
 
 
 if __name__ == '__main__':

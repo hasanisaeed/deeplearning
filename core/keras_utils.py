@@ -83,11 +83,7 @@ def train_model(model: Model, dataset_id, dataset_prefix, epochs=50, batch_size=
     y_train = to_categorical(y_train, len(np.unique(y_train)))
     y_test = to_categorical(y_test, len(np.unique(y_test)))
 
-    if is_timeseries:
-        factor = 1. / np.cbrt(2)
-    else:
-        factor = 1. / np.sqrt(2)
-
+    factor = 1. / np.cbrt(2) if is_timeseries else 1. / np.sqrt(2)
     path_splits = os.path.split(dataset_prefix)
     if len(path_splits) > 1:
         base_path = os.path.join('weights', *path_splits)
@@ -103,8 +99,13 @@ def train_model(model: Model, dataset_id, dataset_prefix, epochs=50, batch_size=
         if not os.path.exists(all_weights_path):
             os.makedirs(all_weights_path)
 
-    model_checkpoint = ModelCheckpoint("./weights/%s_weights.h5" % dataset_prefix, verbose=1,
-                                       monitor='loss', save_best_only=True, save_weights_only=True)
+    model_checkpoint = ModelCheckpoint(
+        f"./weights/{dataset_prefix}_weights.h5",
+        verbose=1,
+        monitor='loss',
+        save_best_only=True,
+        save_weights_only=True,
+    )
     reduce_lr = ReduceLROnPlateau(monitor='loss', patience=100, mode='auto',
                                   factor=factor, cooldown=0, min_lr=1e-4, verbose=2)
 
@@ -171,8 +172,8 @@ def evaluate_model(model: Model, dataset_id, dataset_prefix, batch_size=128, tes
     optm = Adam(lr=1e-3)
     model.compile(optimizer=optm, loss='categorical_crossentropy', metrics=['accuracy'])
 
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
-    print("Weights loaded from ", "./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
+    print("Weights loaded from ", f"./weights/{dataset_prefix}_weights.h5")
 
     if test_data_subset is not None:
         X_test = X_test[:test_data_subset]
@@ -196,8 +197,8 @@ def loss_model(model: Model, dataset_id, dataset_prefix, batch_size=128, train_d
     optm = Adam(lr=1e-3)
     model.compile(optimizer=optm, loss='categorical_crossentropy', metrics=['accuracy'])
 
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
-    print("Weights loaded from ", "./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
+    print("Weights loaded from ", f"./weights/{dataset_prefix}_weights.h5")
 
     if train_data_subset is not None:
         X_train = X_train[:train_data_subset]
@@ -245,7 +246,7 @@ def build_function(model, layer_names=None, outputs=None):
     """
     inp = model.input
 
-    if layer_names is not None and (type(layer_names) != list and type(layer_names) != tuple):
+    if layer_names is not None and type(layer_names) not in [list, tuple]:
         layer_names = [layer_names]
 
     if outputs is None:
@@ -256,8 +257,7 @@ def build_function(model, layer_names=None, outputs=None):
     else:
         outputs = outputs
 
-    funcs = [K.function([inp] + [K.learning_phase()], [out]) for out in outputs]  # evaluation functions
-    return funcs
+    return [K.function([inp] + [K.learning_phase()], [out]) for out in outputs]
 
 
 def get_outputs(model, inputs, eval_functions, verbose=False):
@@ -274,11 +274,8 @@ def get_outputs(model, inputs, eval_functions, verbose=False):
         List of outputs of the Keras Model.
     """
     if verbose: print('----- activations -----')
-    outputs = []
     layer_outputs = [func([inputs, 1.])[0] for func in eval_functions]
-    for layer_activations in layer_outputs:
-        outputs.append(layer_activations)
-    return outputs
+    return list(layer_outputs)
 
 
 def visualize_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=None, limit=None,
@@ -331,7 +328,7 @@ def visualize_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=No
     attn_lstm_layer = [(i, layer) for (i, layer) in enumerate(model.layers)
                        if layer.__class__.__name__ == 'AttentionLSTM']
 
-    if len(attn_lstm_layer) == 0:
+    if not attn_lstm_layer:
         raise AttributeError('Provided model does not have an Attention layer')
     else:
         i, attn_lstm_layer = attn_lstm_layer[0]  # use first attention lstm layer only
@@ -339,7 +336,7 @@ def visualize_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=No
     attn_lstm_layer.return_attention = True
 
     model.layers[i] = attn_lstm_layer
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     attention_output = model.layers[i].call(model.input)
 
@@ -439,7 +436,7 @@ def write_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=None, 
     attn_lstm_layer = [(i, layer) for (i, layer) in enumerate(model.layers)
                        if layer.__class__.__name__ == 'AttentionLSTM']
 
-    if len(attn_lstm_layer) == 0:
+    if not attn_lstm_layer:
         raise AttributeError('Provided model does not have an Attention layer')
     else:
         i, attn_lstm_layer = attn_lstm_layer[0]  # use first attention lstm layer only
@@ -447,7 +444,7 @@ def write_context_vector(model: Model, dataset_id, dataset_prefix, cutoff=None, 
     attn_lstm_layer.return_attention = True
 
     model.layers[i] = attn_lstm_layer
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     attention_output = model.layers[i].call(model.input)
 
@@ -571,7 +568,7 @@ def visualize_cam(model: Model, dataset_id, dataset_prefix, class_id,
         else:
             X_train, _ = cutoff_sequence(X_train, _, choice, dataset_id, sequence_length)
 
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     class_weights = model.layers[-1].get_weights()[0]
 
@@ -655,8 +652,8 @@ def write_cam(model: Model, dataset_id, dataset_prefix,
         else:
             X_train, _ = cutoff_sequence(_, X_test, choice, dataset_id, sequence_length)
 
-    print("Weights path : ", "./weights/%s_weights.h5" % dataset_prefix)
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    print("Weights path : ", f"./weights/{dataset_prefix}_weights.h5")
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     class_weights = model.layers[-1].get_weights()[0]
 
@@ -703,8 +700,11 @@ def write_cam(model: Model, dataset_id, dataset_prefix,
 
     conv_cam_df = pd.DataFrame(cam_features)
 
-    conv_cam_df.to_csv(basepath + '/%s_features_mean_unnormalized.csv' % dataset_name,
-                       header=False, index=False)
+    conv_cam_df.to_csv(
+        basepath + f'/{dataset_name}_features_mean_unnormalized.csv',
+        header=False,
+        index=False,
+    )
 
 
 def visualize_filters(model: Model, dataset_id, dataset_prefix,
@@ -753,7 +753,7 @@ def visualize_filters(model: Model, dataset_id, dataset_prefix,
         else:
             X_train, _ = cutoff_sequence(X_train, _, choice, dataset_id, sequence_length)
 
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     conv_layers = [layer for layer in model.layers
                    if layer.__class__.__name__ == 'Conv1D']
@@ -765,8 +765,8 @@ def visualize_filters(model: Model, dataset_id, dataset_prefix,
 
     save_dir = os.path.split(dataset_prefix)[0]
 
-    if not os.path.exists('cnn_filters/%s' % (save_dir)):
-        os.makedirs('cnn_filters/%s' % (save_dir))
+    if not os.path.exists(f'cnn_filters/{save_dir}'):
+        os.makedirs(f'cnn_filters/{save_dir}')
 
     dataset_name = os.path.split(dataset_prefix)[-1]
     if dataset_name is None or len(dataset_name) == 0:
@@ -788,7 +788,9 @@ def visualize_filters(model: Model, dataset_id, dataset_prefix,
     channel = channel.reshape((-1, 1))
 
     conv_filters = pd.DataFrame(channel)
-    conv_filters.to_csv('cnn_filters/%s_features.csv' % (dataset_prefix), header=None, index=False)
+    conv_filters.to_csv(
+        f'cnn_filters/{dataset_prefix}_features.csv', header=None, index=False
+    )
 
     sequence_input = sequence_input[0, :, :].transpose()
     sequence_df = pd.DataFrame(sequence_input,
@@ -855,14 +857,16 @@ def extract_features(model: Model, dataset_id, dataset_prefix,
         else:
             X_train, X_test = cutoff_sequence(X_train, X_test, choice, dataset_id, sequence_length)
 
-    model.load_weights("./weights/%s_weights.h5" % dataset_prefix)
+    model.load_weights(f"./weights/{dataset_prefix}_weights.h5")
 
     conv_layers = [layer for layer in model.layers
                    if layer.__class__.__name__ == 'Conv1D']
 
-    lstm_layers = [layer for layer in model.layers
-                   if layer.__class__.__name__ == 'LSTM' or
-                   layer.__class__.__name__ == 'AttentionLSTM']
+    lstm_layers = [
+        layer
+        for layer in model.layers
+        if layer.__class__.__name__ in ['LSTM', 'AttentionLSTM']
+    ]
 
     lstmfcn_layer = model.layers[-2]
 
@@ -878,7 +882,7 @@ def extract_features(model: Model, dataset_id, dataset_prefix,
     if dataset_name is None or len(dataset_name) == 0:
         dataset_name = dataset_prefix
 
-    save_dir = 'layer_features/%s/' % dataset_name
+    save_dir = f'layer_features/{dataset_name}/'
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -899,13 +903,23 @@ def extract_features(model: Model, dataset_id, dataset_prefix,
     print("Train feature shape : ", train_features.shape, "Classes : ", len(np.unique(y_train)))
     print("Test features shape : ", test_features.shape, "Classes : ", len(np.unique(y_test)))
 
-    np.save(save_dir + '%s_%s_train_features.npy' % (layer_name, dataset_name), train_features)
-    np.save(save_dir + '%s_%s_train_labels.npy' % (layer_name, dataset_name), y_train)
-    np.save(save_dir + '%s_%s_test_features.npy' % (layer_name, dataset_name), test_features)
-    np.save(save_dir + '%s_%s_test_labels.npy' % (layer_name, dataset_name), y_test)
+    np.save(
+        save_dir + f'{layer_name}_{dataset_name}_train_features.npy',
+        train_features,
+    )
+    np.save(save_dir + f'{layer_name}_{dataset_name}_train_labels.npy', y_train)
+    np.save(
+        save_dir + f'{layer_name}_{dataset_name}_test_features.npy',
+        test_features,
+    )
+    np.save(save_dir + f'{layer_name}_{dataset_name}_test_labels.npy', y_test)
 
-    print("Saved train feature vectors at %s" % (save_dir + '%s_%s_train_features.npy' % (layer_name, dataset_name)))
-    print("Saved test feature vectors at %s" % (save_dir + '%s_%s_test_features.npy' % (layer_name, dataset_name)))
+    print(
+        f"Saved train feature vectors at {save_dir + f'{layer_name}_{dataset_name}_train_features.npy'}"
+    )
+    print(
+        f"Saved test feature vectors at {save_dir + f'{layer_name}_{dataset_name}_test_features.npy'}"
+    )
     print()
 
 

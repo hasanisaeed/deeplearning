@@ -37,9 +37,7 @@ def create_dataset(step=10):
             for i in range(0, 25000, 5000):
                 p_df = normalized_df.iloc[i:i + 5000]
                 x = np.array(p_df.to_records()).T
-                data = []
-                for item in x:
-                    data.append(np.array(list(item)))
+                data = [np.array(list(item)) for item in x]
                 data = np.array(data)
                 small_data = lttb.downsample(data, n_out=900)
 
@@ -81,18 +79,7 @@ def create_dataset(step=10):
 
 # گام بعدی ایجاد مجموعه train و test میباشد.
 def is_okay(count):
-    if count % 45 == 0 \
-            or count % 45 == 1 \
-            or count % 45 == 2 \
-            or count % 45 == 3 \
-            or count % 45 == 4 \
-            or count % 45 == 5 \
-            or count % 45 == 6 \
-            or count % 45 == 7 \
-            or count % 45 == 8 \
-            or count % 45 == 9:
-        return True
-    return False
+    return count % 45 in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 def file_len(fname):

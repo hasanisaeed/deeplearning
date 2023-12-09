@@ -295,26 +295,25 @@ class AttentionLSTM(Recurrent):
         self.built = True
 
     def preprocess_input(self, inputs, training=None):
-        if self.implementation == 0:
-            input_shape = K.int_shape(inputs)
-            input_dim = input_shape[2]
-            timesteps = input_shape[1]
-
-            x_i = _time_distributed_dense(inputs, self.kernel_i, self.bias_i,
-                                          self.dropout, input_dim, self.units,
-                                          timesteps, training=training)
-            x_f = _time_distributed_dense(inputs, self.kernel_f, self.bias_f,
-                                          self.dropout, input_dim, self.units,
-                                          timesteps, training=training)
-            x_c = _time_distributed_dense(inputs, self.kernel_c, self.bias_c,
-                                          self.dropout, input_dim, self.units,
-                                          timesteps, training=training)
-            x_o = _time_distributed_dense(inputs, self.kernel_o, self.bias_o,
-                                          self.dropout, input_dim, self.units,
-                                          timesteps, training=training)
-            return K.concatenate([x_i, x_f, x_c, x_o], axis=2)
-        else:
+        if self.implementation != 0:
             return inputs
+        input_shape = K.int_shape(inputs)
+        input_dim = input_shape[2]
+        timesteps = input_shape[1]
+
+        x_i = _time_distributed_dense(inputs, self.kernel_i, self.bias_i,
+                                      self.dropout, input_dim, self.units,
+                                      timesteps, training=training)
+        x_f = _time_distributed_dense(inputs, self.kernel_f, self.bias_f,
+                                      self.dropout, input_dim, self.units,
+                                      timesteps, training=training)
+        x_c = _time_distributed_dense(inputs, self.kernel_c, self.bias_c,
+                                      self.dropout, input_dim, self.units,
+                                      timesteps, training=training)
+        x_o = _time_distributed_dense(inputs, self.kernel_o, self.bias_o,
+                                      self.dropout, input_dim, self.units,
+                                      timesteps, training=training)
+        return K.concatenate([x_i, x_f, x_c, x_o], axis=2)
 
     def get_constants(self, inputs, training=None):
         constants = []
@@ -420,13 +419,10 @@ class AttentionLSTM(Recurrent):
             o = self.recurrent_activation(x_o + K.dot(h_tm1 * rec_dp_mask[3], self.recurrent_kernel_o)
                                           + K.dot(z_hat, self.attention_o))
         h = o * self.activation(c)
-        if 0 < self.dropout + self.recurrent_dropout:
+        if self.dropout + self.recurrent_dropout > 0:
             h._uses_learning_phase = True
 
-        if self.return_attention:
-            return context_sequence, [h, c]
-        else:
-            return h, [h, c]
+        return (context_sequence, [h, c]) if self.return_attention else (h, [h, c])
 
     def get_config(self):
         config = {'units': self.units,
