@@ -39,6 +39,7 @@
 `Conv1D(64) => Conv1D(128) => Conv1D(256) => Conv1D(64)`
 
 ## Downsampling (No)
+
 ### #4 Architecture
 `Conv1D(128) => Conv1D(128) => Conv1D(128) => Conv1D(64)`
 
